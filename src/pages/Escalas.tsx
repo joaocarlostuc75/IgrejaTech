@@ -105,12 +105,16 @@ export function Escalas() {
           <p className="text-sm text-secondary-500">Organize as equipes para os cultos e eventos.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button className="px-4 py-2 bg-white border border-secondary-200 rounded-xl text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm">
             Exportar
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            onClick={() => {
+              setIsModalOpen(true);
+              setEditingRoster(null);
+              setFormData({ event: '', date: '', time: '', team: 'Louvor', members: '' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Nova Escala
@@ -120,7 +124,7 @@ export function Escalas() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
               <ClipboardList className="w-6 h-6" />
@@ -130,7 +134,7 @@ export function Escalas() {
           <p className="text-2xl font-bold text-secondary-900 mt-1">{rosters.length}</p>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600">
               <Users className="w-6 h-6" />
@@ -142,7 +146,7 @@ export function Escalas() {
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600">
               <Clock className="w-6 h-6" />
@@ -168,7 +172,7 @@ export function Escalas() {
           />
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center shadow-sm">
             <Filter className="w-4 h-4" />
             Filtros
           </button>
@@ -200,13 +204,13 @@ export function Escalas() {
                   </div>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-secondary-900 mb-2">{roster.event}</h3>
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-secondary-600 gap-2">
+              <h3 className="text-lg font-bold text-secondary-900 mb-3">{roster.event}</h3>
+              <div className="space-y-2.5 mb-4">
+                <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                   <Calendar className="w-4 h-4 text-secondary-400" />
                   {roster.date}
                 </div>
-                <div className="flex items-center text-sm text-secondary-600 gap-2">
+                <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                   <Clock className="w-4 h-4 text-secondary-400" />
                   {roster.time}
                 </div>
@@ -246,12 +250,12 @@ export function Escalas() {
                 )}
               </div>
             </div>
-            <div className="bg-secondary-50 px-5 py-3 border-t border-secondary-200 flex items-center justify-between">
+            <div className="bg-secondary-50 px-5 py-3.5 border-t border-secondary-200 flex items-center justify-between">
               <span className={clsx(
-                "text-xs font-medium flex items-center gap-1",
-                roster.status === 'Confirmado' ? "text-green-600" : "text-orange-600"
+                "text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1.5",
+                roster.status === 'Confirmado' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
               )}>
-                {roster.status === 'Confirmado' ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                {roster.status === 'Confirmado' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                 {roster.status}
               </span>
               <button 
@@ -327,7 +331,7 @@ export function Escalas() {
               >
                 Cancelar
               </button>
-              <button type="submit" form="add-roster-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+              <button type="submit" form="add-roster-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
                 {editingRoster ? 'Salvar Alterações' : 'Salvar Escala'}
               </button>
             </div>

@@ -100,8 +100,12 @@ export function Grupos() {
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            onClick={() => {
+              setIsModalOpen(true);
+              setEditingGroup(null);
+              setFormData({ name: '', leader: '', address: '', meetingDay: 'Quinta-feira', time: '' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Novo Grupo
@@ -111,7 +115,7 @@ export function Grupos() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
               <Network className="w-6 h-6" />
@@ -121,7 +125,7 @@ export function Grupos() {
           <p className="text-2xl font-bold text-secondary-900 mt-1">{groups.length}</p>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600">
               <Users className="w-6 h-6" />
@@ -133,7 +137,7 @@ export function Grupos() {
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600">
               <CheckCircle2 className="w-6 h-6" />
@@ -163,7 +167,7 @@ export function Grupos() {
           <div key={group.id} className="bg-white rounded-xl border border-secondary-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
             <div className="p-5 flex-1">
               <div className="flex justify-between items-start mb-4">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
                   {group.status}
                 </span>
                 <div className="relative group/menu">
@@ -179,18 +183,18 @@ export function Grupos() {
               <h3 className="text-lg font-bold text-secondary-900 mb-1">{group.name}</h3>
               <p className="text-sm text-secondary-500 mb-4">Líder: {group.leader}</p>
               
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-secondary-600 gap-2">
+              <div className="space-y-2.5">
+                <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                   <Calendar className="w-4 h-4 text-secondary-400" />
                   {group.meetingDay} às {group.time}
                 </div>
-                <div className="flex items-center text-sm text-secondary-600 gap-2">
+                <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                   <MapPin className="w-4 h-4 text-secondary-400" />
                   {group.address}
                 </div>
               </div>
             </div>
-            <div className="bg-secondary-50 px-5 py-3 border-t border-secondary-200 flex items-center justify-between">
+            <div className="bg-secondary-50 px-5 py-3.5 border-t border-secondary-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-secondary-600 font-medium">
                 <Users className="w-4 h-4 text-secondary-400" />
                 {group.members} membros
@@ -269,7 +273,7 @@ export function Grupos() {
               >
                 Cancelar
               </button>
-              <button type="submit" form="add-group-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+              <button type="submit" form="add-group-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
                 {editingGroup ? 'Salvar Alterações' : 'Salvar Grupo'}
               </button>
             </div>
@@ -317,7 +321,7 @@ export function Grupos() {
             <div className="p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
                 onClick={() => setViewingGroup(null)}
-                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm"
               >
                 Fechar
               </button>

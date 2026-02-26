@@ -12,6 +12,7 @@ import { Financial } from './pages/Financial';
 import { Events } from './pages/Events';
 import { SocialAction } from './pages/SocialAction';
 import { EBD } from './pages/EBD';
+import { Congregations } from './pages/Congregations';
 import { Patrimonio } from './pages/Patrimonio';
 import { Grupos } from './pages/Grupos';
 import { Escalas } from './pages/Escalas';
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="escalas" element={<Escalas />} />
           <Route path="acao-social" element={<SocialAction />} />
           <Route path="ebd" element={<EBD />} />
+          <Route path="congregacoes" element={<Congregations />} />
           <Route path="patrimonio" element={<Patrimonio />} />
           <Route path="relatorios" element={<Reports />} />
           <Route path="configuracoes" element={<Settings />} />

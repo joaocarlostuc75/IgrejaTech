@@ -36,6 +36,8 @@ export function Patrimonio() {
     photo: null as File | null
   });
 
+  const [editingAsset, setEditingAsset] = useState<any>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -51,19 +53,55 @@ export function Patrimonio() {
     e.preventDefault();
     if (!formData.name || !formData.value) return;
 
-    const newAsset = {
-      id: Date.now(),
-      name: formData.name,
-      category: formData.category,
-      location: formData.location || 'Não especificado',
-      condition: formData.condition,
-      purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate).toLocaleDateString('pt-BR') : 'N/A',
-      value: parseFloat(formData.value)
-    };
+    if (editingAsset) {
+      setAssets(prev => prev.map(a => a.id === editingAsset.id ? {
+        ...a,
+        name: formData.name,
+        category: formData.category,
+        location: formData.location || 'Não especificado',
+        condition: formData.condition,
+        purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate).toLocaleDateString('pt-BR') : 'N/A',
+        value: parseFloat(formData.value)
+      } : a));
+      setEditingAsset(null);
+    } else {
+      const newAsset = {
+        id: Date.now(),
+        name: formData.name,
+        category: formData.category,
+        location: formData.location || 'Não especificado',
+        condition: formData.condition,
+        purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate).toLocaleDateString('pt-BR') : 'N/A',
+        value: parseFloat(formData.value)
+      };
+      setAssets(prev => [...prev, newAsset]);
+    }
 
-    setAssets(prev => [...prev, newAsset]);
     setIsModalOpen(false);
     setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '', photo: null });
+  };
+
+  const handleEdit = (asset: any) => {
+    setEditingAsset(asset);
+    // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
+    let formattedDate = '';
+    if (asset.purchaseDate && asset.purchaseDate !== 'N/A') {
+      const parts = asset.purchaseDate.split('/');
+      if (parts.length === 3) {
+        formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+    }
+
+    setFormData({
+      name: asset.name,
+      category: asset.category,
+      location: asset.location,
+      condition: asset.condition,
+      purchaseDate: formattedDate,
+      value: asset.value.toString(),
+      photo: null
+    });
+    setIsModalOpen(true);
   };
 
   const filteredAssets = assets.filter(a => {
@@ -86,13 +124,17 @@ export function Patrimonio() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsExportModalOpen(true)}
-            className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+            className="px-4 py-2 bg-white border border-secondary-200 rounded-xl text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm"
           >
             Exportar
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            onClick={() => {
+              setIsModalOpen(true);
+              setEditingAsset(null);
+              setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '', photo: null });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Novo Item
@@ -102,7 +144,7 @@ export function Patrimonio() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
               <Box className="w-6 h-6" />
@@ -112,7 +154,7 @@ export function Patrimonio() {
           <p className="text-2xl font-bold text-secondary-900 mt-1">{assets.length}</p>
         </div>
         
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600">
               <CheckCircle2 className="w-6 h-6" />
@@ -124,7 +166,7 @@ export function Patrimonio() {
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600">
               <Wrench className="w-6 h-6" />
@@ -151,7 +193,7 @@ export function Patrimonio() {
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className={clsx(
-              "flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors w-full sm:w-auto justify-center",
+              "flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors w-full sm:w-auto justify-center shadow-sm",
               showFilters ? "bg-secondary-100 border-secondary-300 text-secondary-900" : "bg-white border-secondary-200 text-secondary-700 hover:bg-secondary-50"
             )}
           >
@@ -218,7 +260,7 @@ export function Patrimonio() {
                   <td className="px-6 py-4">{asset.location}</td>
                   <td className="px-6 py-4">
                     <span className={clsx(
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium",
+                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold",
                       asset.condition === 'Bom' ? "bg-green-100 text-green-700" : 
                       asset.condition === 'Regular' ? "bg-yellow-100 text-yellow-700" : 
                       "bg-orange-100 text-orange-700"
@@ -235,7 +277,7 @@ export function Patrimonio() {
                         <MoreVertical className="w-5 h-5" />
                       </button>
                       <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                        <button onClick={() => alert('Funcionalidade de edição em desenvolvimento')} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                        <button onClick={() => handleEdit(asset)} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
                         <button onClick={() => {
                           if(confirm('Tem certeza que deseja excluir este item?')) {
                             setAssets(prev => prev.filter(a => a.id !== asset.id));
@@ -256,9 +298,13 @@ export function Patrimonio() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-secondary-200">
-              <h2 className="text-xl font-bold text-secondary-900">Novo Item de Patrimônio</h2>
+              <h2 className="text-xl font-bold text-secondary-900">{editingAsset ? 'Editar Item' : 'Novo Item de Patrimônio'}</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingAsset(null);
+                  setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '', photo: null });
+                }}
                 className="text-secondary-400 hover:text-secondary-600 transition-colors"
               >
                 <Plus className="w-6 h-6 rotate-45" />
@@ -314,14 +360,18 @@ export function Patrimonio() {
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingAsset(null);
+                  setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '', photo: null });
+                }}
                 type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
-              <button type="submit" form="add-asset-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                Salvar Item
+              <button type="submit" form="add-asset-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
+                {editingAsset ? 'Salvar Alterações' : 'Salvar Item'}
               </button>
             </div>
           </div>
@@ -371,7 +421,7 @@ export function Patrimonio() {
                   alert('Relatório exportado com sucesso!');
                   setIsExportModalOpen(false);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Exportar
               </button>

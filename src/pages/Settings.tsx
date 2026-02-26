@@ -8,7 +8,10 @@ import {
   Globe, 
   Save,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -58,7 +61,7 @@ export function Settings() {
           <p className="text-sm text-secondary-500">Gerencie as preferências do sistema e segurança.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
             <Save className="w-4 h-4" />
             Salvar Alterações
           </button>
@@ -79,7 +82,7 @@ export function Settings() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={clsx(
-                  "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors text-left",
+                  "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-colors text-left",
                   activeTab === tab.id
                     ? "bg-primary-50 text-primary-700"
                     : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
@@ -93,11 +96,11 @@ export function Settings() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
+        <div className="flex-1 bg-white rounded-2xl border border-secondary-200 shadow-sm overflow-hidden">
           {activeTab === 'geral' && (
-            <div className="p-6 space-y-8">
+            <div className="p-6 sm:p-8 space-y-8">
               <div>
-                <h2 className="text-lg font-bold text-secondary-900 mb-4">Informações da Igreja</h2>
+                <h2 className="text-lg font-bold text-secondary-900 mb-6">Informações da Igreja</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-secondary-700">Nome da Igreja</label>
@@ -114,25 +117,25 @@ export function Settings() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-secondary-200">
-                <h2 className="text-lg font-bold text-secondary-900 mb-4">Preferências do Sistema</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+              <div className="pt-8 border-t border-secondary-200">
+                <h2 className="text-lg font-bold text-secondary-900 mb-6">Preferências do Sistema</h2>
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-secondary-900">Fuso Horário</p>
-                      <p className="text-xs text-secondary-500">Define o horário padrão para eventos e relatórios.</p>
+                      <p className="text-sm font-bold text-secondary-900">Fuso Horário</p>
+                      <p className="text-sm text-secondary-500 mt-1">Define o horário padrão para eventos e relatórios.</p>
                     </div>
-                    <select className="px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select className="w-full sm:w-auto px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
                       <option>Brasília (GMT-3)</option>
                       <option>Manaus (GMT-4)</option>
                     </select>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium text-secondary-900">Moeda Padrão</p>
-                      <p className="text-xs text-secondary-500">Moeda utilizada no módulo financeiro.</p>
+                      <p className="text-sm font-bold text-secondary-900">Moeda Padrão</p>
+                      <p className="text-sm text-secondary-500 mt-1">Moeda utilizada no módulo financeiro.</p>
                     </div>
-                    <select className="px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <select className="w-full sm:w-auto px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
                       <option>Real (BRL)</option>
                       <option>Dólar (USD)</option>
                     </select>
@@ -143,7 +146,7 @@ export function Settings() {
           )}
 
           {activeTab === 'acesso' && (
-            <div className="p-6 space-y-6">
+            <div className="p-6 sm:p-8 space-y-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-secondary-900">Controle de Acesso (RLS)</h2>
                 <button className="px-4 py-2 bg-secondary-100 text-secondary-700 rounded-lg text-sm font-medium hover:bg-secondary-200 transition-colors">
@@ -158,15 +161,17 @@ export function Settings() {
                   { role: 'Tesoureiro', desc: 'Acesso exclusivo ao módulo financeiro e relatórios de arrecadação.', users: 1 },
                   { role: 'Líder de Ministério', desc: 'Acesso a eventos, EBD e membros do seu ministério.', users: 8 },
                 ].map((role, i) => (
-                  <div key={i} className="flex items-start justify-between p-4 border border-secondary-200 rounded-lg hover:border-primary-300 transition-colors">
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 border border-secondary-200 rounded-xl hover:border-primary-300 transition-colors gap-4">
                     <div>
                       <h3 className="text-sm font-bold text-secondary-900">{role.role}</h3>
                       <p className="text-sm text-secondary-500 mt-1">{role.desc}</p>
-                      <p className="text-xs text-secondary-400 mt-2 flex items-center gap-1">
-                        <Users className="w-3 h-3" /> {role.users} usuários com este perfil
-                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-secondary-600 bg-secondary-100 px-2.5 py-1 rounded-full">
+                          <Users className="w-3.5 h-3.5" /> {role.users} usuários
+                        </span>
+                      </div>
                     </div>
-                    <button className="text-sm font-medium text-primary-600 hover:text-primary-700">Editar Permissões</button>
+                    <button className="text-sm font-medium text-primary-600 hover:text-primary-700 shrink-0">Editar Permissões</button>
                   </div>
                 ))}
               </div>
@@ -174,20 +179,20 @@ export function Settings() {
           )}
 
           {activeTab === 'lgpd' && (
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                  <Shield className="w-5 h-5" />
+            <div className="p-6 sm:p-8 space-y-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+                  <Shield className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-secondary-900">Conformidade LGPD</h2>
-                  <p className="text-sm text-secondary-500">Configurações de privacidade e proteção de dados.</p>
+                  <p className="text-sm text-secondary-500 mt-1">Configurações de privacidade e proteção de dados.</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-secondary-50 rounded-lg border border-secondary-200">
-                  <div className="mt-1">
+                <div className="flex items-start gap-4 p-5 bg-secondary-50 rounded-xl border border-secondary-200">
+                  <div className="mt-0.5">
                     <input type="checkbox" className="w-4 h-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500" defaultChecked />
                   </div>
                   <div>
@@ -196,8 +201,8 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-secondary-50 rounded-lg border border-secondary-200">
-                  <div className="mt-1">
+                <div className="flex items-start gap-4 p-5 bg-secondary-50 rounded-xl border border-secondary-200">
+                  <div className="mt-0.5">
                     <input type="checkbox" className="w-4 h-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500" defaultChecked />
                   </div>
                   <div>
@@ -206,8 +211,8 @@ export function Settings() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 bg-secondary-50 rounded-lg border border-secondary-200">
-                  <div className="mt-1">
+                <div className="flex items-start gap-4 p-5 bg-secondary-50 rounded-xl border border-secondary-200">
+                  <div className="mt-0.5">
                     <input type="checkbox" className="w-4 h-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500" />
                   </div>
                   <div>
@@ -217,8 +222,8 @@ export function Settings() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-secondary-200">
-                <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+              <div className="pt-8 border-t border-secondary-200">
+                <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm">
                   Gerar Relatório de Impacto à Proteção de Dados (RIPD)
                 </button>
               </div>
@@ -226,58 +231,67 @@ export function Settings() {
           )}
 
           {activeTab === 'backup' && (
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                  <Database className="w-5 h-5" />
+            <div className="p-6 sm:p-8 space-y-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                  <Database className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-secondary-900">Backup e Armazenamento</h2>
-                  <p className="text-sm text-secondary-500">Gerencie cópias de segurança e uso de disco.</p>
+                  <p className="text-sm text-secondary-500 mt-1">Gerencie cópias de segurança e uso de disco.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <div className="p-4 border border-secondary-200 rounded-lg">
-                  <h3 className="text-sm font-medium text-secondary-500 mb-1">Último Backup</h3>
-                  <p className="text-lg font-bold text-secondary-900 flex items-center gap-2">
+                <div className="p-5 border border-secondary-200 rounded-xl bg-white shadow-sm">
+                  <h3 className="text-sm font-medium text-secondary-500 mb-2">Último Backup</h3>
+                  <p className="text-xl font-bold text-secondary-900 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                     {lastBackup}
                   </p>
-                  <p className="text-xs text-secondary-400 mt-2">Tamanho: 450 MB</p>
+                  <p className="text-sm text-secondary-500 mt-2">Tamanho: 450 MB</p>
                 </div>
-                <div className="p-4 border border-secondary-200 rounded-lg">
-                  <h3 className="text-sm font-medium text-secondary-500 mb-1">Armazenamento Utilizado</h3>
-                  <p className="text-lg font-bold text-secondary-900">2.4 GB / 10 GB</p>
-                  <div className="w-full h-2 bg-secondary-100 rounded-full mt-2 overflow-hidden">
+                <div className="p-5 border border-secondary-200 rounded-xl bg-white shadow-sm">
+                  <h3 className="text-sm font-medium text-secondary-500 mb-2">Armazenamento Utilizado</h3>
+                  <p className="text-xl font-bold text-secondary-900">2.4 GB <span className="text-sm font-medium text-secondary-500">/ 10 GB</span></p>
+                  <div className="w-full h-2.5 bg-secondary-100 rounded-full mt-3 overflow-hidden">
                     <div className="h-full bg-blue-500 rounded-full" style={{ width: '24%' }}></div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-secondary-900">Ações de Banco de Dados</h3>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <h3 className="text-base font-bold text-secondary-900">Ações de Banco de Dados</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <button 
                     onClick={handleBackup}
                     disabled={isBackingUp || isRestoring || isClearingLogs}
-                    className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-secondary-200 rounded-xl text-secondary-700 hover:bg-secondary-50 hover:border-primary-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
-                    {isBackingUp ? 'Realizando Backup...' : 'Fazer Backup Agora'}
+                    <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 group-hover:bg-primary-100 transition-colors">
+                      <Download className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold">{isBackingUp ? 'Realizando Backup...' : 'Fazer Backup Agora'}</span>
                   </button>
                   <button 
                     onClick={handleRestore}
                     disabled={isBackingUp || isRestoring || isClearingLogs}
-                    className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-secondary-200 rounded-xl text-secondary-700 hover:bg-secondary-50 hover:border-primary-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
-                    {isRestoring ? 'Restaurando...' : 'Restaurar Backup'}
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold">{isRestoring ? 'Restaurando...' : 'Restaurar Backup'}</span>
                   </button>
                   <button 
                     onClick={handleClearLogs}
                     disabled={isBackingUp || isRestoring || isClearingLogs}
-                    className="flex-1 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:bg-red-100 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-secondary-200 rounded-xl text-secondary-700 hover:bg-red-50 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
-                    {isClearingLogs ? 'Limpando...' : 'Limpar Logs Antigos'}
+                    <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600 group-hover:bg-red-100 transition-colors">
+                      <Trash2 className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm font-bold text-red-600">{isClearingLogs ? 'Limpando...' : 'Limpar Logs Antigos'}</span>
                   </button>
                 </div>
               </div>

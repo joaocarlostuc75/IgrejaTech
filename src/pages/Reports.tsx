@@ -22,6 +22,7 @@ import {
   YAxis,
   CartesianGrid
 } from 'recharts';
+import { generateReportSummary } from '../services/ai';
 
 const demographicData = [
   { name: 'Jovens (18-25)', value: 35 },
@@ -49,6 +50,22 @@ export function Reports() {
     { id: 2, name: 'Censo de Membros Q3', date: '15/10/2023', type: 'Membros', size: '1.1 MB' },
     { id: 3, name: 'Relatório de Ação Social - Campanha do Agasalho', date: '30/08/2023', type: 'Ação Social', size: '3.5 MB' },
   ]);
+
+  const [aiSummary, setAiSummary] = useState('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  const handleGenerateSummary = async () => {
+    setIsGeneratingSummary(true);
+    const context = JSON.stringify({
+      demografia: demographicData,
+      crescimento: growthData,
+      relatoriosRecentes: reports
+    });
+    
+    const summary = await generateReportSummary(context);
+    setAiSummary(summary);
+    setIsGeneratingSummary(false);
+  };
 
   const handleGenerateReport = () => {
     setIsGenerating(true);
@@ -84,14 +101,14 @@ export function Reports() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsFilterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-xl text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm"
           >
             <Filter className="w-4 h-4" />
             Filtros
           </button>
           <button 
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
           >
             <Download className="w-4 h-4" />
             Exportar PDF
@@ -131,27 +148,47 @@ export function Reports() {
         <button 
           onClick={handleGenerateReport}
           disabled={isGenerating}
-          className="px-6 py-2 bg-secondary-900 text-white rounded-lg text-sm font-medium hover:bg-secondary-800 transition-colors w-full sm:w-auto mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-secondary-900 text-white rounded-xl text-sm font-medium hover:bg-secondary-800 transition-colors w-full sm:w-auto mt-5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {isGenerating ? 'Gerando...' : 'Gerar Relatório'}
         </button>
       </div>
 
       {/* AI Narrative Summary */}
-      <div className="bg-gradient-to-r from-primary-50 to-blue-50 p-6 rounded-xl border border-primary-100 shadow-sm">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-bold text-secondary-900">Resumo Inteligente</h2>
+      <div className="bg-gradient-to-r from-primary-50 to-blue-50 p-6 rounded-xl border border-primary-100 shadow-sm relative overflow-hidden">
+        <div className="flex items-center justify-between mb-4 relative z-10">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary-600" />
+            <h2 className="text-lg font-bold text-secondary-900">Resumo Inteligente</h2>
+          </div>
+          <button 
+            onClick={handleGenerateSummary}
+            disabled={isGeneratingSummary}
+            className="text-xs font-medium bg-white/80 hover:bg-white text-primary-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+          >
+            {isGeneratingSummary ? 'Gerando análise...' : 'Atualizar com IA'}
+          </button>
         </div>
-        <p className="text-secondary-700 leading-relaxed">
-          Nos últimos 6 meses, a igreja apresentou um <strong className="text-green-600">crescimento de 30%</strong> no número de membros ativos, impulsionado principalmente pela classe de jovens. A arrecadação acompanhou esse crescimento, com um aumento de 15% nas ofertas voluntárias. No entanto, as despesas com manutenção do templo subiram 8%, sugerindo a necessidade de revisão de contratos de serviços. A frequência média da EBD está excelente (88%), mas a classe de Novos Convertidos precisa de atenção pastoral devido à queda recente.
-        </p>
+        
+        {aiSummary ? (
+          <div className="text-secondary-700 leading-relaxed relative z-10 markdown-body">
+            {aiSummary}
+          </div>
+        ) : (
+          <p className="text-secondary-700 leading-relaxed relative z-10">
+            Clique em "Atualizar com IA" para gerar uma análise executiva baseada nos dados atuais de crescimento, demografia e relatórios recentes da igreja.
+          </p>
+        )}
+        
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-primary-400/10 rounded-full blur-3xl"></div>
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Demographics Pie Chart */}
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-secondary-900 flex items-center gap-2">
               <PieChartIcon className="w-5 h-5 text-secondary-400" />
@@ -185,7 +222,7 @@ export function Reports() {
         </div>
 
         {/* Growth Bar Chart */}
-        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
+        <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-secondary-900 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-secondary-400" />
@@ -210,7 +247,7 @@ export function Reports() {
       </div>
 
       {/* Recent Reports List */}
-      <div className="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden flex flex-col">
         <div className="p-6 border-b border-secondary-200">
           <h3 className="text-lg font-bold text-secondary-900">Relatórios Salvos</h3>
         </div>
@@ -300,7 +337,7 @@ export function Reports() {
                   alert('Filtros aplicados!');
                   setIsFilterModalOpen(false);
                 }}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Aplicar Filtros
               </button>

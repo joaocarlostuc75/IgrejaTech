@@ -33,6 +33,8 @@ export function Events() {
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('Todos os Tipos');
+  const [selectedLocation, setSelectedLocation] = useState('Todos os Locais');
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [blockedPeriods, setBlockedPeriods] = useState<{date: string, reason: string}[]>([]);
   const [blockFormData, setBlockFormData] = useState({ date: '', reason: '' });
@@ -45,6 +47,9 @@ export function Events() {
     description: ''
   });
   const [showConflictAlert, setShowConflictAlert] = useState(true);
+
+  const locations = ['Todos os Locais', ...new Set(events.map(e => e.location))];
+  const types = ['Todos os Tipos', ...new Set(events.map(e => e.type))];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -130,10 +135,14 @@ export function Events() {
     }
   };
 
-  const filteredEvents = events.filter(e => 
-    e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredEvents = events.filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          e.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = selectedType === 'Todos os Tipos' || e.type === selectedType;
+    const matchesLocation = selectedLocation === 'Todos os Locais' || e.location === selectedLocation;
+    
+    return matchesSearch && matchesType && matchesLocation;
+  });
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -202,13 +211,17 @@ export function Events() {
           </div>
           <button 
             onClick={() => setIsBlockModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 text-secondary-700 rounded-lg text-sm font-medium hover:bg-secondary-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 text-secondary-700 rounded-lg text-sm font-medium hover:bg-secondary-50 transition-colors shadow-sm"
           >
             Bloquear Data
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            onClick={() => {
+              setIsModalOpen(true);
+              setEditingEvent(null);
+              setFormData({ title: '', date: '', time: '', location: 'Templo Principal', type: 'Culto', description: '' });
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Novo Evento
@@ -218,7 +231,7 @@ export function Events() {
 
       {/* Urgent Alerts */}
       {showConflictAlert && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
           <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
           <div>
             <h3 className="text-sm font-bold text-orange-800">Atenção: Conflito de Agendamento</h3>
@@ -250,13 +263,25 @@ export function Events() {
               />
             </div>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <select className="px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white">
-                <option>Todos os Tipos</option>
-                <option>Culto</option>
-                <option>Reunião</option>
-                <option>Ação Social</option>
+              <select 
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+              >
+                {locations.map(location => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
               </select>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center">
+              <select 
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+              >
+                {types.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center shadow-sm">
                 <Filter className="w-4 h-4" />
                 Filtros
               </button>
@@ -288,30 +313,30 @@ export function Events() {
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-secondary-900 mb-2">{event.title}</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-secondary-600 gap-2">
+                  <h3 className="text-lg font-bold text-secondary-900 mb-3">{event.title}</h3>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                       <CalendarIcon className="w-4 h-4 text-secondary-400" />
                       {new Date(event.date).toLocaleDateString('pt-BR')}
                     </div>
-                    <div className="flex items-center text-sm text-secondary-600 gap-2">
+                    <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                       <Clock className="w-4 h-4 text-secondary-400" />
                       {event.time}
                     </div>
-                    <div className="flex items-center text-sm text-secondary-600 gap-2">
+                    <div className="flex items-center text-sm text-secondary-600 gap-2.5">
                       <MapPin className="w-4 h-4 text-secondary-400" />
                       {event.location}
                     </div>
                   </div>
                 </div>
-                <div className="bg-secondary-50 px-5 py-3 border-t border-secondary-200 flex items-center justify-between">
+                <div className="bg-secondary-50 px-5 py-3.5 border-t border-secondary-200 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-secondary-600 font-medium">
                     <Users className="w-4 h-4 text-secondary-400" />
                     {event.attendees} confirmados
                   </div>
                   <span className={clsx(
-                    "text-xs font-medium",
-                    event.status === 'Confirmado' ? "text-green-600" : "text-orange-600"
+                    "text-xs font-bold px-2 py-1 rounded-full",
+                    event.status === 'Confirmado' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
                   )}>
                     {event.status}
                   </span>
@@ -471,7 +496,7 @@ export function Events() {
               >
                 Cancelar
               </button>
-              <button type="submit" form="add-event-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+              <button type="submit" form="add-event-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm">
                 {editingEvent ? 'Salvar Alterações' : 'Criar Evento'}
               </button>
             </div>
@@ -512,7 +537,7 @@ export function Events() {
               >
                 Cancelar
               </button>
-              <button type="submit" form="add-block-form" className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+              <button type="submit" form="add-block-form" className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors shadow-sm">
                 Confirmar Bloqueio
               </button>
             </div>
