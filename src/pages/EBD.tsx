@@ -22,8 +22,15 @@ const initialClasses = [
 
 export function EBD() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isNewClassModalOpen, setIsNewClassModalOpen] = useState(false);
   const [classes, setClasses] = useState(initialClasses);
   const [searchQuery, setSearchQuery] = useState('');
+  const [newClassData, setNewClassData] = useState({
+    name: '',
+    teacher: '',
+    topic: ''
+  });
   const [formData, setFormData] = useState({
     classId: '',
     date: new Date().toISOString().split('T')[0],
@@ -52,6 +59,24 @@ export function EBD() {
     setFormData({ classId: '', date: new Date().toISOString().split('T')[0], topic: '' });
   };
 
+  const handleAddClass = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClassData.name || !newClassData.teacher) return;
+
+    const newClass = {
+      id: Date.now(),
+      name: newClassData.name,
+      teacher: newClassData.teacher,
+      students: 0,
+      attendance: '0%',
+      topic: newClassData.topic || 'A definir'
+    };
+
+    setClasses(prev => [...prev, newClass]);
+    setIsNewClassModalOpen(false);
+    setNewClassData({ name: '', teacher: '', topic: '' });
+  };
+
   const filteredClasses = classes.filter(c => 
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.teacher.toLowerCase().includes(searchQuery.toLowerCase())
@@ -68,7 +93,10 @@ export function EBD() {
           <p className="text-sm text-secondary-500">Gestão de classes, alunos e frequência.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button 
+            onClick={() => setIsReportModalOpen(true)}
+            className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+          >
             Relatório EBD
           </button>
           <button 
@@ -138,7 +166,10 @@ export function EBD() {
                 className="w-full pl-10 pr-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center">
+            <button 
+              onClick={() => setIsNewClassModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center"
+            >
               <Plus className="w-4 h-4" />
               Nova Classe
             </button>
@@ -180,9 +211,19 @@ export function EBD() {
                       </td>
                       <td className="px-6 py-4 text-secondary-500">{c.topic}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
+                        <div className="relative group inline-block">
+                          <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <button onClick={() => alert('Funcionalidade de edição em desenvolvimento')} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                            <button onClick={() => {
+                              if(confirm('Tem certeza que deseja excluir esta classe?')) {
+                                setClasses(prev => prev.filter(cls => cls.id !== c.id));
+                              }
+                            }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -279,6 +320,106 @@ export function EBD() {
               </button>
               <button type="submit" form="add-attendance-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
                 Salvar Frequência
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Relatório EBD */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Relatório EBD</h2>
+              <button 
+                onClick={() => setIsReportModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Mês de Referência</label>
+                <input type="month" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Classe Específica (Opcional)</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option value="">Todas as Classes</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Formato</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>PDF</option>
+                  <option>Excel</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsReportModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  alert('Relatório gerado com sucesso!');
+                  setIsReportModalOpen(false);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                Gerar Relatório
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nova Classe */}
+      {isNewClassModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Nova Classe</h2>
+              <button 
+                onClick={() => setIsNewClassModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6">
+              <form id="add-class-form" onSubmit={handleAddClass} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Nome da Classe *</label>
+                  <input required value={newClassData.name} onChange={(e) => setNewClassData({...newClassData, name: e.target.value})} type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: Classe de Jovens" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Professor Responsável *</label>
+                  <input required value={newClassData.teacher} onChange={(e) => setNewClassData({...newClassData, teacher: e.target.value})} type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: Pr. João" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Tópico Atual (Opcional)</label>
+                  <input value={newClassData.topic} onChange={(e) => setNewClassData({...newClassData, topic: e.target.value})} type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: Atos dos Apóstolos" />
+                </div>
+              </form>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsNewClassModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button type="submit" form="add-class-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                Criar Classe
               </button>
             </div>
           </div>

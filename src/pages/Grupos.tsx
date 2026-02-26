@@ -21,6 +21,8 @@ export function Grupos() {
   const [groups, setGroups] = useState(initialGroups);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [viewingGroup, setViewingGroup] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     leader: '',
@@ -38,20 +40,50 @@ export function Grupos() {
     e.preventDefault();
     if (!formData.name || !formData.leader) return;
 
-    const newGroup = {
-      id: Date.now(),
-      name: formData.name,
-      leader: formData.leader,
-      members: 0,
-      address: formData.address,
-      meetingDay: formData.meetingDay,
-      time: formData.time,
-      status: 'Ativo'
-    };
+    if (editingGroup) {
+      setGroups(prev => prev.map(g => g.id === editingGroup.id ? {
+        ...g,
+        name: formData.name,
+        leader: formData.leader,
+        address: formData.address,
+        meetingDay: formData.meetingDay,
+        time: formData.time
+      } : g));
+      setEditingGroup(null);
+    } else {
+      const newGroup = {
+        id: Date.now(),
+        name: formData.name,
+        leader: formData.leader,
+        members: 0,
+        address: formData.address,
+        meetingDay: formData.meetingDay,
+        time: formData.time,
+        status: 'Ativo'
+      };
+      setGroups(prev => [...prev, newGroup]);
+    }
 
-    setGroups(prev => [...prev, newGroup]);
     setIsModalOpen(false);
     setFormData({ name: '', leader: '', address: '', meetingDay: 'Quinta-feira', time: '' });
+  };
+
+  const handleEdit = (group: any) => {
+    setEditingGroup(group);
+    setFormData({
+      name: group.name,
+      leader: group.leader,
+      address: group.address,
+      meetingDay: group.meetingDay,
+      time: group.time
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir este grupo?')) {
+      setGroups(prev => prev.filter(g => g.id !== id));
+    }
   };
 
   const filteredGroups = groups.filter(g => 
@@ -134,9 +166,15 @@ export function Grupos() {
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                   {group.status}
                 </span>
-                <button className="text-secondary-400 hover:text-secondary-600 transition-colors">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
+                <div className="relative group/menu">
+                  <button className="text-secondary-400 hover:text-secondary-600 transition-colors p-1 rounded-md hover:bg-secondary-100">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10">
+                    <button onClick={() => handleEdit(group)} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                    <button onClick={() => handleDelete(group.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                  </div>
+                </div>
               </div>
               <h3 className="text-lg font-bold text-secondary-900 mb-1">{group.name}</h3>
               <p className="text-sm text-secondary-500 mb-4">Líder: {group.leader}</p>
@@ -157,7 +195,10 @@ export function Grupos() {
                 <Users className="w-4 h-4 text-secondary-400" />
                 {group.members} membros
               </div>
-              <button className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <button 
+                onClick={() => setViewingGroup(group)}
+                className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              >
                 Ver detalhes
               </button>
             </div>
@@ -165,14 +206,18 @@ export function Grupos() {
         ))}
       </div>
 
-      {/* Modal Novo Grupo */}
+      {/* Modal Novo/Editar Grupo */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-secondary-200">
-              <h2 className="text-xl font-bold text-secondary-900">Novo Grupo Pequeno</h2>
+              <h2 className="text-xl font-bold text-secondary-900">{editingGroup ? 'Editar Grupo' : 'Novo Grupo Pequeno'}</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingGroup(null);
+                  setFormData({ name: '', leader: '', address: '', meetingDay: 'Quinta-feira', time: '' });
+                }}
                 className="text-secondary-400 hover:text-secondary-600 transition-colors"
               >
                 <Plus className="w-6 h-6 rotate-45" />
@@ -214,14 +259,67 @@ export function Grupos() {
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingGroup(null);
+                  setFormData({ name: '', leader: '', address: '', meetingDay: 'Quinta-feira', time: '' });
+                }}
                 type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
               <button type="submit" form="add-group-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                Salvar Grupo
+                {editingGroup ? 'Salvar Alterações' : 'Salvar Grupo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Detalhes */}
+      {viewingGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Detalhes do Grupo</h2>
+              <button 
+                onClick={() => setViewingGroup(null)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-secondary-500">Nome</h3>
+                <p className="text-lg font-bold text-secondary-900">{viewingGroup.name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-secondary-500">Líder</h3>
+                <p className="text-base text-secondary-900">{viewingGroup.leader}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-secondary-500">Reuniões</h3>
+                <p className="text-base text-secondary-900">{viewingGroup.meetingDay} às {viewingGroup.time}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-secondary-500">Endereço</h3>
+                <p className="text-base text-secondary-900">{viewingGroup.address}</p>
+              </div>
+              <div className="pt-4 border-t border-secondary-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-secondary-500">Membros Ativos</h3>
+                  <span className="text-lg font-bold text-primary-600">{viewingGroup.members}</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setViewingGroup(null)}
+                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>

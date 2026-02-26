@@ -42,6 +42,8 @@ const initialTransactions = [
 export function Financial() {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [formData, setFormData] = useState({
     type: 'income',
     amount: '',
@@ -89,7 +91,10 @@ export function Financial() {
           <p className="text-sm text-secondary-500">Gestão de dízimos, ofertas e despesas.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button 
+            onClick={() => setShowReportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+          >
             <Download className="w-4 h-4" />
             Relatório
           </button>
@@ -173,7 +178,12 @@ export function Financial() {
         <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-secondary-900">Transações Recentes</h2>
-            <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">Ver todas</button>
+            <button 
+              onClick={() => setShowAllTransactions(true)}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Ver todas
+            </button>
           </div>
           <div className="space-y-4 flex-1 overflow-y-auto pr-2">
             {transactions.slice(0, 4).map((tx) => (
@@ -282,12 +292,130 @@ export function Financial() {
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
                 onClick={() => setIsModalOpen(false)}
+                type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
               <button type="submit" form="add-transaction-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
                 Salvar Transação
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Todas as Transações */}
+      {showAllTransactions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200 shrink-0">
+              <h2 className="text-xl font-bold text-secondary-900">Todas as Transações</h2>
+              <button 
+                onClick={() => setShowAllTransactions(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 border border-secondary-200 rounded-lg hover:bg-secondary-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className={clsx(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        transaction.type === 'income' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                      )}>
+                        {transaction.type === 'income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="font-bold text-secondary-900">{transaction.description}</p>
+                        <p className="text-sm text-secondary-500">{transaction.category} • {transaction.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={clsx(
+                        "font-bold",
+                        transaction.type === 'income' ? "text-green-600" : "text-red-600"
+                      )}>
+                        {transaction.type === 'income' ? '+' : '-'} R$ {Math.abs(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-sm text-secondary-500">{transaction.status}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-6 border-t border-secondary-200 bg-secondary-50 shrink-0">
+              <button 
+                onClick={() => setShowAllTransactions(false)}
+                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Relatórios Financeiros */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Gerar Relatório Financeiro</h2>
+              <button 
+                onClick={() => setShowReportModal(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Tipo de Relatório</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>Fluxo de Caixa Detalhado</option>
+                  <option>Resumo de Dízimos e Ofertas</option>
+                  <option>Despesas por Categoria</option>
+                  <option>Balanço Mensal</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Data Inicial</label>
+                  <input type="date" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Data Final</label>
+                  <input type="date" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Formato</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>PDF</option>
+                  <option>Excel (XLSX)</option>
+                  <option>CSV</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setShowReportModal(false)}
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  alert('Relatório gerado com sucesso!');
+                  setShowReportModal(false);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                Gerar Relatório
               </button>
             </div>
           </div>

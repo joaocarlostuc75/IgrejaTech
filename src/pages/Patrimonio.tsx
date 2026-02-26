@@ -21,19 +21,30 @@ const initialAssets = [
 export function Patrimonio() {
   const [assets, setAssets] = useState(initialAssets);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCondition, setFilterCondition] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: 'Áudio',
     location: '',
     condition: 'Bom',
     purchaseDate: '',
-    value: ''
+    value: '',
+    photo: null as File | null
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData(prev => ({ ...prev, photo: e.target.files![0] }));
+    }
   };
 
   const handleAddAsset = (e: React.FormEvent) => {
@@ -52,13 +63,15 @@ export function Patrimonio() {
 
     setAssets(prev => [...prev, newAsset]);
     setIsModalOpen(false);
-    setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '' });
+    setFormData({ name: '', category: 'Áudio', location: '', condition: 'Bom', purchaseDate: '', value: '', photo: null });
   };
 
-  const filteredAssets = assets.filter(a => 
-    a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAssets = assets.filter(a => {
+    const matchesSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory ? a.category === filterCategory : true;
+    const matchesCondition = filterCondition ? a.condition === filterCondition : true;
+    return matchesSearch && matchesCategory && matchesCondition;
+  });
 
   const totalValue = assets.reduce((acc, curr) => acc + curr.value, 0);
   const maintenanceCount = assets.filter(a => a.condition === 'Manutenção').length;
@@ -71,7 +84,10 @@ export function Patrimonio() {
           <p className="text-sm text-secondary-500">Controle de bens, equipamentos e instrumentos.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button 
+            onClick={() => setIsExportModalOpen(true)}
+            className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+          >
             Exportar
           </button>
           <button 
@@ -132,12 +148,53 @@ export function Patrimonio() {
           />
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors w-full sm:w-auto justify-center">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={clsx(
+              "flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-colors w-full sm:w-auto justify-center",
+              showFilters ? "bg-secondary-100 border-secondary-300 text-secondary-900" : "bg-white border-secondary-200 text-secondary-700 hover:bg-secondary-50"
+            )}
+          >
             <Filter className="w-4 h-4" />
             Filtros
           </button>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="bg-white p-4 rounded-xl border border-secondary-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-secondary-700">Categoria</label>
+            <select 
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Todas</option>
+              <option>Áudio</option>
+              <option>Vídeo</option>
+              <option>Instrumentos</option>
+              <option>Móveis</option>
+              <option>Equipamentos</option>
+              <option>Outros</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-secondary-700">Condição</label>
+            <select 
+              value={filterCondition}
+              onChange={(e) => setFilterCondition(e.target.value)}
+              className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">Todas</option>
+              <option>Bom</option>
+              <option>Regular</option>
+              <option>Manutenção</option>
+              <option>Ruim</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Assets Table */}
       <div className="bg-white rounded-xl border border-secondary-200 shadow-sm overflow-hidden">
@@ -173,9 +230,19 @@ export function Patrimonio() {
                     R$ {asset.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
-                      <MoreVertical className="w-5 h-5" />
-                    </button>
+                    <div className="relative group inline-block">
+                      <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                      <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        <button onClick={() => alert('Funcionalidade de edição em desenvolvimento')} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                        <button onClick={() => {
+                          if(confirm('Tem certeza que deseja excluir este item?')) {
+                            setAssets(prev => prev.filter(a => a.id !== asset.id));
+                          }
+                        }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -239,6 +306,10 @@ export function Patrimonio() {
                     <input required name="value" value={formData.value} onChange={handleInputChange} type="number" step="0.01" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="0.00" />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Foto do Item</label>
+                  <input type="file" accept="image/*" onChange={handleFileChange} className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
+                </div>
               </form>
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
@@ -251,6 +322,58 @@ export function Patrimonio() {
               </button>
               <button type="submit" form="add-asset-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
                 Salvar Item
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Exportar */}
+      {isExportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Exportar Patrimônio</h2>
+              <button 
+                onClick={() => setIsExportModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Formato</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>PDF</option>
+                  <option>Excel (CSV)</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Incluir Itens</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>Todos os itens</option>
+                  <option>Apenas itens em manutenção</option>
+                  <option>Apenas itens em bom estado</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsExportModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  alert('Relatório exportado com sucesso!');
+                  setIsExportModalOpen(false);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                Exportar
               </button>
             </div>
           </div>

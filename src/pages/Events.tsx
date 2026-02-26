@@ -29,9 +29,13 @@ const initialEvents = [
 export function Events() {
   const [events, setEvents] = useState(initialEvents);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [blockedPeriods, setBlockedPeriods] = useState<{date: string, reason: string}[]>([]);
+  const [blockFormData, setBlockFormData] = useState({ date: '', reason: '' });
   const [formData, setFormData] = useState({
     title: '',
     date: '',
@@ -51,20 +55,73 @@ export function Events() {
     e.preventDefault();
     if (!formData.title || !formData.date || !formData.time) return;
 
-    const newEvent = {
-      id: Date.now(),
-      title: formData.title,
-      date: formData.date,
-      time: formData.time,
-      location: formData.location,
-      type: formData.type,
-      attendees: 0,
-      status: 'Confirmado'
-    };
+    // Check for blocked dates
+    const isBlocked = blockedPeriods.some(b => b.date === formData.date);
+    if (isBlocked) {
+      alert('Esta data está bloqueada para novos eventos.');
+      return;
+    }
 
-    setEvents(prev => [...prev, newEvent]);
+    // Check for conflicts
+    const hasConflict = events.some(ev => 
+      ev.date === formData.date && 
+      ev.time === formData.time && 
+      ev.location === formData.location &&
+      ev.id !== editingEvent?.id
+    );
+
+    if (hasConflict) {
+      alert('Conflito de agendamento! Já existe um evento neste local e horário.');
+      return;
+    }
+
+    if (editingEvent) {
+      setEvents(prev => prev.map(ev => ev.id === editingEvent.id ? {
+        ...ev,
+        title: formData.title,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location,
+        type: formData.type,
+      } : ev));
+      setEditingEvent(null);
+    } else {
+      const newEvent = {
+        id: Date.now(),
+        title: formData.title,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location,
+        type: formData.type,
+        attendees: 0,
+        status: 'Confirmado'
+      };
+      setEvents(prev => [...prev, newEvent]);
+    }
+
     setIsModalOpen(false);
     setFormData({ title: '', date: '', time: '', location: 'Templo Principal', type: 'Culto', description: '' });
+  };
+
+  const handleEdit = (event: any) => {
+    setEditingEvent(event);
+    setFormData({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      type: event.type,
+      description: ''
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleAddBlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!blockFormData.date || !blockFormData.reason) return;
+    setBlockedPeriods(prev => [...prev, blockFormData]);
+    setIsBlockModalOpen(false);
+    setBlockFormData({ date: '', reason: '' });
   };
 
   const handleDeleteEvent = (id: number) => {
@@ -144,6 +201,12 @@ export function Events() {
             </button>
           </div>
           <button 
+            onClick={() => setIsBlockModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 text-secondary-700 rounded-lg text-sm font-medium hover:bg-secondary-50 transition-colors"
+          >
+            Bloquear Data
+          </button>
+          <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
           >
@@ -215,13 +278,15 @@ export function Events() {
                     )}>
                       {event.type}
                     </span>
-                    <button 
-                      onClick={() => handleDeleteEvent(event.id)}
-                      className="text-red-400 hover:text-red-600 transition-colors"
-                      title="Excluir evento"
-                    >
-                      <AlertTriangle className="w-5 h-5" />
-                    </button>
+                    <div className="relative group">
+                      <button className="text-secondary-400 hover:text-secondary-600 transition-colors p-1 rounded-md hover:bg-secondary-100">
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                      <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                        <button onClick={() => handleEdit(event)} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                        <button onClick={() => handleDeleteEvent(event.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                      </div>
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-secondary-900 mb-2">{event.title}</h3>
                   <div className="space-y-2">
@@ -280,13 +345,16 @@ export function Events() {
               </div>
             ))}
             {days.map((date, i) => {
+              const dateString = date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : null;
               const dayEvents = getEventsForDate(date);
               const isToday = date && date.toDateString() === new Date().toDateString();
+              const isBlocked = dateString ? blockedPeriods.find(b => b.date === dateString) : null;
               
               return (
                 <div key={i} className={clsx(
-                  "min-h-[100px] p-2 transition-colors cursor-pointer",
-                  date ? "bg-white hover:bg-secondary-50" : "bg-secondary-50/50"
+                  "min-h-[100px] p-2 transition-colors cursor-pointer relative",
+                  date ? "bg-white hover:bg-secondary-50" : "bg-secondary-50/50",
+                  isBlocked && "bg-red-50/50"
                 )}>
                   {date && (
                     <>
@@ -296,6 +364,11 @@ export function Events() {
                       )}>
                         {date.getDate()}
                       </span>
+                      {isBlocked && (
+                        <div className="text-[10px] font-bold text-red-600 mb-1 bg-red-100 px-1 rounded truncate" title={isBlocked.reason}>
+                          Bloqueado: {isBlocked.reason}
+                        </div>
+                      )}
                       <div className="space-y-1">
                         {dayEvents.map(event => (
                           <div 
@@ -327,9 +400,13 @@ export function Events() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-secondary-200">
-              <h2 className="text-xl font-bold text-secondary-900">Novo Evento</h2>
+              <h2 className="text-xl font-bold text-secondary-900">{editingEvent ? 'Editar Evento' : 'Novo Evento'}</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingEvent(null);
+                  setFormData({ title: '', date: '', time: '', location: 'Templo Principal', type: 'Culto', description: '' });
+                }}
                 className="text-secondary-400 hover:text-secondary-600 transition-colors"
               >
                 <Plus className="w-6 h-6 rotate-45" />
@@ -384,13 +461,59 @@ export function Events() {
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingEvent(null);
+                  setFormData({ title: '', date: '', time: '', location: 'Templo Principal', type: 'Culto', description: '' });
+                }}
+                type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
               <button type="submit" form="add-event-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                Criar Evento
+                {editingEvent ? 'Salvar Alterações' : 'Criar Evento'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bloquear Data */}
+      {isBlockModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Bloquear Data</h2>
+              <button 
+                onClick={() => setIsBlockModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6">
+              <form id="add-block-form" onSubmit={handleAddBlock} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Data *</label>
+                  <input required value={blockFormData.date} onChange={(e) => setBlockFormData({...blockFormData, date: e.target.value})} type="date" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Motivo do Bloqueio *</label>
+                  <input required value={blockFormData.reason} onChange={(e) => setBlockFormData({...blockFormData, reason: e.target.value})} type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: Manutenção do Templo" />
+                </div>
+              </form>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsBlockModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button type="submit" form="add-block-form" className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                Confirmar Bloqueio
               </button>
             </div>
           </div>

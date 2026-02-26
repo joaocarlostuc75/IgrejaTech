@@ -22,6 +22,8 @@ export function Escalas() {
   const [rosters, setRosters] = useState(initialRosters);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedRosterId, setExpandedRosterId] = useState<number | null>(null);
+  const [editingRoster, setEditingRoster] = useState<any>(null);
   const [formData, setFormData] = useState({
     event: '',
     date: '',
@@ -39,19 +41,55 @@ export function Escalas() {
     e.preventDefault();
     if (!formData.event || !formData.date || !formData.team) return;
 
-    const newRoster = {
-      id: Date.now(),
-      event: formData.event,
-      date: new Date(formData.date).toLocaleDateString('pt-BR'),
-      time: formData.time,
-      team: formData.team,
-      members: formData.members.split(',').map(m => m.trim()).filter(m => m),
-      status: 'Pendente'
-    };
+    if (editingRoster) {
+      setRosters(prev => prev.map(r => r.id === editingRoster.id ? {
+        ...r,
+        event: formData.event,
+        date: formData.date.includes('-') ? new Date(formData.date).toLocaleDateString('pt-BR') : formData.date,
+        time: formData.time,
+        team: formData.team,
+        members: formData.members.split(',').map(m => m.trim()).filter(m => m),
+      } : r));
+      setEditingRoster(null);
+    } else {
+      const newRoster = {
+        id: Date.now(),
+        event: formData.event,
+        date: new Date(formData.date).toLocaleDateString('pt-BR'),
+        time: formData.time,
+        team: formData.team,
+        members: formData.members.split(',').map(m => m.trim()).filter(m => m),
+        status: 'Pendente'
+      };
+      setRosters(prev => [...prev, newRoster]);
+    }
 
-    setRosters(prev => [...prev, newRoster]);
     setIsModalOpen(false);
     setFormData({ event: '', date: '', time: '', team: 'Louvor', members: '' });
+  };
+
+  const handleEdit = (roster: any) => {
+    setEditingRoster(roster);
+    // Convert DD/MM/YYYY to YYYY-MM-DD for input type="date"
+    const [day, month, year] = roster.date.split('/');
+    setFormData({
+      event: roster.event,
+      date: `${year}-${month}-${day}`,
+      time: roster.time,
+      team: roster.team,
+      members: roster.members.join(', ')
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir esta escala?')) {
+      setRosters(prev => prev.filter(r => r.id !== id));
+    }
+  };
+
+  const handleNotify = (team: string) => {
+    alert(`Notificação enviada para a equipe de ${team}!`);
   };
 
   const filteredRosters = rosters.filter(r => 
@@ -152,9 +190,15 @@ export function Escalas() {
                 )}>
                   {roster.team}
                 </span>
-                <button className="text-secondary-400 hover:text-secondary-600 transition-colors">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
+                <div className="relative group">
+                  <button className="text-secondary-400 hover:text-secondary-600 transition-colors p-1 rounded-md hover:bg-secondary-100">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                  <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                    <button onClick={() => handleEdit(roster)} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                    <button onClick={() => handleDelete(roster.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                  </div>
+                </div>
               </div>
               <h3 className="text-lg font-bold text-secondary-900 mb-2">{roster.event}</h3>
               <div className="space-y-2 mb-4">
@@ -169,14 +213,37 @@ export function Escalas() {
               </div>
               
               <div>
-                <h4 className="text-xs font-bold text-secondary-500 uppercase tracking-wider mb-2">Voluntários</h4>
-                <div className="flex flex-wrap gap-2">
-                  {roster.members.map((member, idx) => (
-                    <span key={idx} className="inline-flex items-center px-2 py-1 rounded bg-secondary-50 border border-secondary-200 text-xs font-medium text-secondary-700">
-                      {member}
-                    </span>
-                  ))}
+                <div 
+                  className="flex items-center justify-between cursor-pointer mb-2"
+                  onClick={() => setExpandedRosterId(expandedRosterId === roster.id ? null : roster.id)}
+                >
+                  <h4 className="text-xs font-bold text-secondary-500 uppercase tracking-wider">Voluntários ({roster.members.length})</h4>
+                  <span className="text-xs text-primary-600 font-medium">{expandedRosterId === roster.id ? 'Ocultar' : 'Ver todos'}</span>
                 </div>
+                
+                {expandedRosterId === roster.id ? (
+                  <ul className="space-y-1 mt-2">
+                    {roster.members.map((member, idx) => (
+                      <li key={idx} className="flex items-center gap-2 text-sm text-secondary-700 bg-secondary-50 px-2 py-1.5 rounded-md">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary-500"></div>
+                        {member}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {roster.members.slice(0, 3).map((member, idx) => (
+                      <span key={idx} className="inline-flex items-center px-2 py-1 rounded bg-secondary-50 border border-secondary-200 text-xs font-medium text-secondary-700">
+                        {member}
+                      </span>
+                    ))}
+                    {roster.members.length > 3 && (
+                      <span className="inline-flex items-center px-2 py-1 rounded bg-secondary-50 border border-secondary-200 text-xs font-medium text-secondary-500">
+                        +{roster.members.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="bg-secondary-50 px-5 py-3 border-t border-secondary-200 flex items-center justify-between">
@@ -187,7 +254,10 @@ export function Escalas() {
                 {roster.status === 'Confirmado' ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                 {roster.status}
               </span>
-              <button className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <button 
+                onClick={() => handleNotify(roster.team)}
+                className="text-sm font-medium text-primary-600 hover:text-primary-700"
+              >
                 Notificar equipe
               </button>
             </div>
@@ -200,9 +270,13 @@ export function Escalas() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-secondary-200">
-              <h2 className="text-xl font-bold text-secondary-900">Nova Escala</h2>
+              <h2 className="text-xl font-bold text-secondary-900">{editingRoster ? 'Editar Escala' : 'Nova Escala'}</h2>
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingRoster(null);
+                  setFormData({ event: '', date: '', time: '', team: 'Louvor', members: '' });
+                }}
                 className="text-secondary-400 hover:text-secondary-600 transition-colors"
               >
                 <Plus className="w-6 h-6 rotate-45" />
@@ -243,14 +317,18 @@ export function Escalas() {
             </div>
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setEditingRoster(null);
+                  setFormData({ event: '', date: '', time: '', team: 'Louvor', members: '' });
+                }}
                 type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
               <button type="submit" form="add-roster-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
-                Salvar Escala
+                {editingRoster ? 'Salvar Alterações' : 'Salvar Escala'}
               </button>
             </div>
           </div>

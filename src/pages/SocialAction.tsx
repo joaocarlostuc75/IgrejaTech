@@ -30,9 +30,14 @@ const initialResources = [
 export function SocialAction() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'beneficiarios' | 'recursos'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isBeneficiaryModalOpen, setIsBeneficiaryModalOpen] = useState(false);
+  const [showAllAssistances, setShowAllAssistances] = useState(false);
   const [beneficiaries, setBeneficiaries] = useState(initialBeneficiaries);
   const [resources, setResources] = useState(initialResources);
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingBeneficiary, setEditingBeneficiary] = useState<any>(null);
+  const [editingResource, setEditingResource] = useState<any>(null);
   const [formData, setFormData] = useState({
     beneficiaryId: '',
     resourceId: '',
@@ -66,12 +71,13 @@ export function SocialAction() {
       return r;
     }));
 
-    // Update beneficiary last assistance
+    // Update beneficiary last assistance and priority
     setBeneficiaries(prev => prev.map(b => {
       if (b.id === parseInt(formData.beneficiaryId)) {
         return {
           ...b,
-          lastAssistance: new Date(formData.date).toLocaleDateString('pt-BR')
+          lastAssistance: new Date(formData.date).toLocaleDateString('pt-BR'),
+          priority: 'Média' // Lower priority after assistance
         };
       }
       return b;
@@ -79,6 +85,23 @@ export function SocialAction() {
 
     setIsModalOpen(false);
     setFormData({ beneficiaryId: '', resourceId: '', quantity: '1', date: '', notes: '' });
+  };
+
+  const handleAttendPriority = (beneficiaryId: number) => {
+    setFormData({ ...formData, beneficiaryId: beneficiaryId.toString(), date: new Date().toISOString().split('T')[0] });
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteBeneficiary = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir este beneficiário?')) {
+      setBeneficiaries(prev => prev.filter(b => b.id !== id));
+    }
+  };
+
+  const handleDeleteResource = (id: number) => {
+    if (confirm('Tem certeza que deseja excluir este recurso?')) {
+      setResources(prev => prev.filter(r => r.id !== id));
+    }
   };
 
   const filteredBeneficiaries = beneficiaries.filter(b => 
@@ -98,7 +121,10 @@ export function SocialAction() {
           <p className="text-sm text-secondary-500">Gestão de beneficiários e recursos assistenciais.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button 
+            onClick={() => alert('Relatório exportado com sucesso!')}
+            className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+          >
             Exportar
           </button>
           <button 
@@ -186,7 +212,10 @@ export function SocialAction() {
                         <p className="text-xs text-red-700">Última assistência: {b.lastAssistance}</p>
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 bg-white border border-red-200 rounded-md text-xs font-medium text-red-700 hover:bg-red-50 transition-colors">
+                    <button 
+                      onClick={() => handleAttendPriority(b.id)}
+                      className="px-3 py-1.5 bg-white border border-red-200 rounded-md text-xs font-medium text-red-700 hover:bg-red-50 transition-colors"
+                    >
                       Atender
                     </button>
                   </div>
@@ -198,7 +227,12 @@ export function SocialAction() {
             <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-secondary-900">Últimas Assistências</h2>
-                <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">Ver todas</button>
+                <button 
+                  onClick={() => setShowAllAssistances(true)}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Ver todas
+                </button>
               </div>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -282,9 +316,15 @@ export function SocialAction() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
+                        <div className="relative group inline-block">
+                          <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <button onClick={() => alert('Funcionalidade de edição em desenvolvimento')} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                            <button onClick={() => handleDeleteBeneficiary(b.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -308,7 +348,10 @@ export function SocialAction() {
                 className="w-full pl-10 pr-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors w-full sm:w-auto justify-center">
+            <button 
+              onClick={() => setIsResourceModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors w-full sm:w-auto justify-center"
+            >
               <Plus className="w-4 h-4" />
               Novo Recurso
             </button>
@@ -343,9 +386,15 @@ export function SocialAction() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
+                        <div className="relative group inline-block">
+                          <button className="p-2 text-secondary-400 hover:text-secondary-600 transition-colors rounded-lg hover:bg-secondary-100">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          <div className="absolute right-0 mt-1 w-32 bg-white border border-secondary-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                            <button onClick={() => alert('Funcionalidade de edição em desenvolvimento')} className="w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-50">Editar</button>
+                            <button onClick={() => handleDeleteResource(r.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Excluir</button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -407,12 +456,115 @@ export function SocialAction() {
             <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
               <button 
                 onClick={() => setIsModalOpen(false)}
+                type="button"
                 className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
               >
                 Cancelar
               </button>
               <button type="submit" form="add-assistance-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
                 Salvar Registro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo Recurso */}
+      {isResourceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Novo Recurso</h2>
+              <button 
+                onClick={() => setIsResourceModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6">
+              <form id="add-resource-form" onSubmit={(e) => {
+                e.preventDefault();
+                alert('Recurso adicionado com sucesso!');
+                setIsResourceModalOpen(false);
+              }} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Nome do Recurso *</label>
+                  <input required type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: Cesta Básica" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-secondary-700">Categoria *</label>
+                  <select required className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option>Alimentos</option>
+                    <option>Vestuário</option>
+                    <option>Higiene</option>
+                    <option>Outros</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-secondary-700">Quantidade Inicial *</label>
+                    <input required type="number" min="0" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-secondary-700">Unidade *</label>
+                    <input required type="text" className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ex: unidades, kg" />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsResourceModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button type="submit" form="add-resource-form" className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                Salvar Recurso
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ver Todas as Assistências */}
+      {showAllAssistances && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200 shrink-0">
+              <h2 className="text-xl font-bold text-secondary-900">Todas as Assistências</h2>
+              <button 
+                onClick={() => setShowAllAssistances(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-4 border border-secondary-200 rounded-lg hover:bg-secondary-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-secondary-900">Cesta Básica - Família {i}</p>
+                        <p className="text-sm text-secondary-500">Voluntário Responsável • {new Date().toLocaleDateString('pt-BR')}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-6 border-t border-secondary-200 bg-secondary-50 shrink-0">
+              <button 
+                onClick={() => setShowAllAssistances(false)}
+                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>

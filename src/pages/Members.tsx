@@ -26,7 +26,7 @@ export function Members() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 20;
 
   const [formData, setFormData] = useState({
     name: '',

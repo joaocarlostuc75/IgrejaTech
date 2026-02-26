@@ -14,6 +14,41 @@ import clsx from 'clsx';
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<'geral' | 'acesso' | 'lgpd' | 'backup'>('geral');
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isClearingLogs, setIsClearingLogs] = useState(false);
+  const [lastBackup, setLastBackup] = useState('Hoje, 03:00 AM');
+
+  const handleBackup = () => {
+    setIsBackingUp(true);
+    setTimeout(() => {
+      setIsBackingUp(false);
+      setLastBackup('Agora mesmo');
+      alert('Backup realizado com sucesso!');
+    }, 2000);
+  };
+
+  const handleRestore = () => {
+    const confirmRestore = confirm('Atenção: Restaurar um backup substituirá todos os dados atuais. Deseja continuar?');
+    if (confirmRestore) {
+      setIsRestoring(true);
+      setTimeout(() => {
+        setIsRestoring(false);
+        alert('Backup restaurado com sucesso!');
+      }, 2500);
+    }
+  };
+
+  const handleClearLogs = () => {
+    const confirmClear = confirm('Tem certeza que deseja limpar os logs antigos? Esta ação não pode ser desfeita.');
+    if (confirmClear) {
+      setIsClearingLogs(true);
+      setTimeout(() => {
+        setIsClearingLogs(false);
+        alert('Logs antigos limpos com sucesso!');
+      }, 1000);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -207,7 +242,7 @@ export function Settings() {
                   <h3 className="text-sm font-medium text-secondary-500 mb-1">Último Backup</h3>
                   <p className="text-lg font-bold text-secondary-900 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    Hoje, 03:00 AM
+                    {lastBackup}
                   </p>
                   <p className="text-xs text-secondary-400 mt-2">Tamanho: 450 MB</p>
                 </div>
@@ -223,14 +258,26 @@ export function Settings() {
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-secondary-900">Ações de Banco de Dados</h3>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center">
-                    Fazer Backup Agora
+                  <button 
+                    onClick={handleBackup}
+                    disabled={isBackingUp || isRestoring || isClearingLogs}
+                    className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isBackingUp ? 'Realizando Backup...' : 'Fazer Backup Agora'}
                   </button>
-                  <button className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center">
-                    Restaurar Backup
+                  <button 
+                    onClick={handleRestore}
+                    disabled={isBackingUp || isRestoring || isClearingLogs}
+                    className="flex-1 px-4 py-3 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRestoring ? 'Restaurando...' : 'Restaurar Backup'}
                   </button>
-                  <button className="flex-1 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:bg-red-100 transition-colors text-center">
-                    Limpar Logs Antigos
+                  <button 
+                    onClick={handleClearLogs}
+                    disabled={isBackingUp || isRestoring || isClearingLogs}
+                    className="flex-1 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 hover:bg-red-100 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isClearingLogs ? 'Limpando...' : 'Limpar Logs Antigos'}
                   </button>
                 </div>
               </div>

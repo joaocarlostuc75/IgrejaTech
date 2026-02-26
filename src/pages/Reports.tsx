@@ -42,6 +42,37 @@ const growthData = [
 
 export function Reports() {
   const [reportType, setReportType] = useState('geral');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [reports, setReports] = useState([
+    { id: 1, name: 'Fechamento Financeiro - Outubro 2023', date: '01/11/2023', type: 'Financeiro', size: '2.4 MB' },
+    { id: 2, name: 'Censo de Membros Q3', date: '15/10/2023', type: 'Membros', size: '1.1 MB' },
+    { id: 3, name: 'Relatório de Ação Social - Campanha do Agasalho', date: '30/08/2023', type: 'Ação Social', size: '3.5 MB' },
+  ]);
+
+  const handleGenerateReport = () => {
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+      const newReport = {
+        id: Date.now(),
+        name: `Relatório ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} - ${new Date().toLocaleDateString('pt-BR')}`,
+        date: new Date().toLocaleDateString('pt-BR'),
+        type: reportType.charAt(0).toUpperCase() + reportType.slice(1),
+        size: `${(Math.random() * 5 + 1).toFixed(1)} MB`
+      };
+      setReports([newReport, ...reports]);
+      alert('Relatório gerado com sucesso!');
+    }, 1500);
+  };
+
+  const handleExportPDF = () => {
+    alert('Exportando visão atual para PDF...');
+  };
+
+  const handleDownloadReport = (name: string) => {
+    alert(`Iniciando download de: ${name}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -51,11 +82,17 @@ export function Reports() {
           <p className="text-sm text-secondary-500">Análises detalhadas e métricas da igreja.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors">
+          <button 
+            onClick={() => setIsFilterModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+          >
             <Filter className="w-4 h-4" />
             Filtros
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+          <button 
+            onClick={handleExportPDF}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+          >
             <Download className="w-4 h-4" />
             Exportar PDF
           </button>
@@ -91,8 +128,12 @@ export function Reports() {
             </div>
           </div>
         </div>
-        <button className="px-6 py-2 bg-secondary-900 text-white rounded-lg text-sm font-medium hover:bg-secondary-800 transition-colors w-full sm:w-auto mt-5">
-          Gerar Relatório
+        <button 
+          onClick={handleGenerateReport}
+          disabled={isGenerating}
+          className="px-6 py-2 bg-secondary-900 text-white rounded-lg text-sm font-medium hover:bg-secondary-800 transition-colors w-full sm:w-auto mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isGenerating ? 'Gerando...' : 'Gerar Relatório'}
         </button>
       </div>
 
@@ -174,12 +215,8 @@ export function Reports() {
           <h3 className="text-lg font-bold text-secondary-900">Relatórios Salvos</h3>
         </div>
         <div className="divide-y divide-secondary-200">
-          {[
-            { name: 'Fechamento Financeiro - Outubro 2023', date: '01/11/2023', type: 'Financeiro', size: '2.4 MB' },
-            { name: 'Censo de Membros Q3', date: '15/10/2023', type: 'Membros', size: '1.1 MB' },
-            { name: 'Relatório de Ação Social - Campanha do Agasalho', date: '30/08/2023', type: 'Ação Social', size: '3.5 MB' },
-          ].map((report, i) => (
-            <div key={i} className="p-4 flex items-center justify-between hover:bg-secondary-50 transition-colors">
+          {reports.map((report) => (
+            <div key={report.id} className="p-4 flex items-center justify-between hover:bg-secondary-50 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
                   <FileText className="w-5 h-5" />
@@ -195,13 +232,82 @@ export function Reports() {
                   </div>
                 </div>
               </div>
-              <button className="p-2 text-secondary-400 hover:text-primary-600 transition-colors rounded-lg hover:bg-primary-50">
+              <button 
+                onClick={() => handleDownloadReport(report.name)}
+                className="p-2 text-secondary-400 hover:text-primary-600 transition-colors rounded-lg hover:bg-primary-50"
+              >
                 <Download className="w-5 h-5" />
               </button>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Modal Filtros */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200">
+              <h2 className="text-xl font-bold text-secondary-900">Filtros Avançados</h2>
+              <button 
+                onClick={() => setIsFilterModalOpen(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Filter className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Métricas a Incluir</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500" />
+                    <span className="text-sm text-secondary-700">Crescimento de Membros</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500" />
+                    <span className="text-sm text-secondary-700">Receitas e Despesas</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500" />
+                    <span className="text-sm text-secondary-700">Frequência EBD</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" defaultChecked className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500" />
+                    <span className="text-sm text-secondary-700">Ações Sociais</span>
+                  </label>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-secondary-700">Comparação</label>
+                <select className="w-full px-4 py-2 border border-secondary-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option>Sem comparação</option>
+                  <option>Período anterior</option>
+                  <option>Ano anterior</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+              <button 
+                onClick={() => setIsFilterModalOpen(false)}
+                type="button"
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  alert('Filtros aplicados!');
+                  setIsFilterModalOpen(false);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+              >
+                Aplicar Filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
