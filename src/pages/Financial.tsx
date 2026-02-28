@@ -14,7 +14,8 @@ import {
   CreditCard,
   DollarSign,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -32,6 +33,7 @@ import {
   Cell
 } from 'recharts';
 import clsx from 'clsx';
+import { generateFinancialAnalysis } from '../services/ai';
 
 const monthlyData = [
   { name: 'Jan', receitas: 4000, despesas: 2400, saldo: 1600 },
@@ -74,6 +76,17 @@ export function Financial() {
   });
 
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [analysis, setAnalysis] = useState('');
+  const [isGeneratingAnalysis, setIsGeneratingAnalysis] = useState(false);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+
+  const handleGenerateAnalysis = async () => {
+    setShowAnalysisModal(true);
+    setIsGeneratingAnalysis(true);
+    const result = await generateFinancialAnalysis(transactions, monthlyData);
+    setAnalysis(result);
+    setIsGeneratingAnalysis(false);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -156,6 +169,13 @@ export function Financial() {
           <p className="text-sm text-secondary-500">Gestão completa de dízimos, ofertas e despesas.</p>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={handleGenerateAnalysis}
+            className="flex items-center gap-2 px-4 py-2 bg-secondary-900 text-white border border-secondary-900 rounded-xl text-sm font-medium hover:bg-secondary-800 transition-colors shadow-sm"
+          >
+            <Sparkles className="w-4 h-4 text-yellow-400" />
+            Análise IA
+          </button>
           <button 
             onClick={() => setShowReportModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-secondary-200 rounded-xl text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors shadow-sm"
@@ -262,7 +282,7 @@ export function Financial() {
             </div>
           </div>
           <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
@@ -298,7 +318,7 @@ export function Financial() {
             </h2>
           </div>
           <div className="h-64 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={expenseCategories}
@@ -665,6 +685,46 @@ export function Financial() {
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors shadow-sm"
               >
                 Gerar Relatório
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Análise IA */}
+      {showAnalysisModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-secondary-200 bg-secondary-50">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary-600" />
+                <h2 className="text-xl font-bold text-secondary-900">Análise Financeira Inteligente</h2>
+              </div>
+              <button 
+                onClick={() => setShowAnalysisModal(false)}
+                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+              >
+                <Plus className="w-6 h-6 rotate-45" />
+              </button>
+            </div>
+            <div className="p-6">
+              {isGeneratingAnalysis ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-secondary-600 font-medium">Analisando transações e fluxo de caixa...</p>
+                  <p className="text-sm text-secondary-400 mt-2">Isso pode levar alguns segundos.</p>
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none text-secondary-700">
+                  <p className="whitespace-pre-line leading-relaxed">{analysis}</p>
+                </div>
+              )}
+            </div>
+            <div className="p-6 border-t border-secondary-200 bg-secondary-50 flex justify-end">
+              <button 
+                onClick={() => setShowAnalysisModal(false)}
+                className="px-4 py-2 bg-white border border-secondary-200 rounded-lg text-sm font-medium text-secondary-700 hover:bg-secondary-50 transition-colors"
+              >
+                Fechar
               </button>
             </div>
           </div>

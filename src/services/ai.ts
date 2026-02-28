@@ -16,6 +16,40 @@ export async function generateReportSummary(contextData: string) {
   }
 }
 
+export async function generateDashboardInsights(stats: any, memberData: any, socialData: any) {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: `Atue como um consultor estratégico de igreja. Analise os seguintes dados do dashboard e gere um insight curto e acionável (máximo 2 frases) sobre uma tendência positiva ou um ponto de atenção. Fale diretamente com o pastor.
+      
+      Dados:
+      Estatísticas Gerais: ${JSON.stringify(stats)}
+      Crescimento de Membros: ${JSON.stringify(memberData)}
+      Ação Social: ${JSON.stringify(socialData)}`,
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Erro na IA:", error);
+    return "Não foi possível gerar insights no momento.";
+  }
+}
+
+export async function generateFinancialAnalysis(transactions: any[], monthlyData: any[]) {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: `Atue como um consultor financeiro de igreja. Analise as transações recentes e o fluxo de caixa mensal. Gere uma análise curta (máximo 3 frases) identificando padrões de gastos ou oportunidades de economia.
+      
+      Transações Recentes: ${JSON.stringify(transactions.slice(0, 10))}
+      Fluxo de Caixa Mensal: ${JSON.stringify(monthlyData)}`,
+    });
+    return response.text;
+  } catch (error) {
+    console.error("Erro na IA:", error);
+    return "Não foi possível gerar a análise financeira.";
+  }
+}
+
 export async function generateLessonTopics(classProfile: string, topic: string) {
   try {
     const response = await ai.models.generateContent({

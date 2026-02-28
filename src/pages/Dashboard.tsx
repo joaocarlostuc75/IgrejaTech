@@ -48,7 +48,19 @@ const stats = [
   { name: 'Beneficiários Sociais', value: '32', icon: HeartHandshake, change: '+3%', changeType: 'positive', color: 'orange' },
 ];
 
+import { generateDashboardInsights } from '../services/ai';
+
 export function Dashboard() {
+  const [insight, setInsight] = React.useState('');
+  const [isGeneratingInsight, setIsGeneratingInsight] = React.useState(false);
+
+  const handleGenerateInsight = async () => {
+    setIsGeneratingInsight(true);
+    const result = await generateDashboardInsights(stats, memberData, socialData);
+    setInsight(result);
+    setIsGeneratingInsight(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -111,7 +123,7 @@ export function Dashboard() {
               </select>
             </div>
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart data={memberData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorMembros" x1="0" y1="0" x2="0" y2="1">
@@ -136,7 +148,7 @@ export function Dashboard() {
             <div className="bg-white p-6 rounded-xl border border-secondary-200 shadow-sm">
               <h2 className="text-lg font-bold text-secondary-900 mb-6">Assistência Social</h2>
               <div className="h-48 relative">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <PieChart>
                     <Pie
                       data={socialData}
@@ -231,10 +243,14 @@ export function Dashboard() {
               </div>
               <h3 className="text-lg font-bold mb-2">Análise de Tendências</h3>
               <p className="text-sm text-secondary-400 mb-6 leading-relaxed">
-                Notei um aumento de 15% na participação dos jovens nos últimos cultos. Sugiro criar um evento específico para este público no próximo mês.
+                {insight || "Clique abaixo para gerar uma análise inteligente dos dados do seu dashboard."}
               </p>
-              <button className="w-full py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                Gerar Insights com Gemini <ArrowRight className="w-4 h-4" />
+              <button 
+                onClick={handleGenerateInsight}
+                disabled={isGeneratingInsight}
+                className="w-full py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingInsight ? 'Gerando...' : 'Gerar Insights com Gemini'} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
